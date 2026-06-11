@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klasifikasi Motif Batik Menggunakan GLCM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --coklat-tua:  #3B1F0E;
+      --coklat-mid:  #7B3F1A;
+      --emas:        #C8922A;
+      --emas-muda:   #E8C06A;
+      --krem:        #F5EDD8;
+      --krem-gelap:  #EAD9B8;
+      --hijau-batik: #4A6741;
+      --teks:        #2A1505;
+      --abu:         #8C7B6B;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--krem);
+      color: var(--teks);
+      min-height: 100vh;
+    }
+
+    /* ---- MOTIF BATIK BACKGROUND (CSS only) ---- */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(200,146,42,0.06) 20px, rgba(200,146,42,0.06) 21px),
+        repeating-linear-gradient(-45deg, transparent, transparent 20px, rgba(200,146,42,0.06) 20px, rgba(200,146,42,0.06) 21px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ---- HEADER ---- */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .ornamen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .ornamen-line {
+      flex: 1;
+      max-width: 80px;
+      height: 2px;
+      background: linear-gradient(to right, transparent, var(--emas));
+    }
+    .ornamen-line.kanan {
+      background: linear-gradient(to left, transparent, var(--emas));
+    }
+
+    .ornamen-diamond {
+      width: 8px; height: 8px;
+      background: var(--emas);
+      transform: rotate(45deg);
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--coklat-tua);
+      line-height: 1.2;
+    }
+
+    header p {
+      margin-top: 8px;
+      color: var(--abu);
+      font-size: 0.9rem;
+    }
+
+    .badge-glcm {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 4px 14px;
+      background: var(--coklat-tua);
+      color: var(--emas-muda);
+      font-size: 0.75rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border-radius: 20px;
+    }
+
+    /* ---- CARD ---- */
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      border: 1px solid var(--krem-gelap);
+      box-shadow: 0 4px 24px rgba(59,31,14,0.08);
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: var(--coklat-mid);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--krem-gelap);
+    }
+
+    /* ---- UPLOAD AREA ---- */
+    .upload-area {
+      border: 2px dashed var(--emas);
+      border-radius: 12px;
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--krem);
+      position: relative;
+    }
+
+    .upload-area:hover, .upload-area.dragover {
+      background: #FDF6E8;
+      border-color: var(--coklat-mid);
+    }
+
+    .upload-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+
+    .upload-area p {
+      color: var(--abu);
+      font-size: 0.9rem;
+    }
+
+    .upload-area strong {
+      color: var(--coklat-mid);
+    }
+
+    #fileInput {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    /* ---- PREVIEW ---- */
+    #preview-section {
+      display: none;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    #preview-img {
+      max-height: 220px;
+      border-radius: 10px;
+      border: 3px solid var(--krem-gelap);
+      object-fit: contain;
+    }
+
+    .filename {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: var(--abu);
+    }
+
+    /* ---- TOMBOL ---- */
+    .btn-primary {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      background: var(--coklat-tua);
+      color: var(--emas-muda);
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-primary:hover { background: var(--coklat-mid); }
+    .btn-primary:active { transform: scale(0.99); }
+    .btn-primary:disabled { background: var(--abu); cursor: not-allowed; }
+
+    /* ---- HASIL ---- */
+    #result-section { display: none; }
+
+    .result-label {
+      text-align: center;
+      padding: 24px;
+      background: linear-gradient(135deg, var(--coklat-tua), var(--coklat-mid));
+      border-radius: 12px;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .result-label .motif-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--emas-muda);
+    }
+
+    .result-label .confidence {
+      font-size: 0.85rem;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    /* ---- FITUR GLCM ---- */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .feature-item {
+      background: var(--krem);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      border: 1px solid var(--krem-gelap);
+    }
+
+    .feature-name {
+      font-size: 0.75rem;
+      color: var(--abu);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .feature-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: var(--coklat-mid);
+      font-weight: 600;
+    }
+
+    /* ---- BAR VISUALISASI ---- */
+    .feature-bar {
+      margin-top: 4px;
+      height: 4px;
+      background: var(--krem-gelap);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .feature-bar-fill {
+      height: 100%;
+      background: var(--emas);
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+
+    /* ---- DEMO MODE NOTICE ---- */
+    .demo-notice {
+      background: #FFF8E1;
+      border: 1px solid var(--emas);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 0.85rem;
+      color: var(--coklat-mid);
+      margin-bottom: 20px;
+    }
+
+    /* ---- KELAS YANG DIDUKUNG ---- */
+    .class-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .class-pill {
+      padding: 5px 14px;
+      background: var(--krem);
+      border: 1px solid var(--krem-gelap);
+      border-radius: 20px;
+      font-size: 0.82rem;
+      color: var(--coklat-mid);
+    }
+
+    /* ---- LOADING SPINNER ---- */
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(232,192,106,0.4);
+      border-top-color: var(--emas-muda);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- FOOTER ---- */
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: var(--abu);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="ornamen">
+      <div class="ornamen-line"></div>
+      <div class="ornamen-diamond"></div>
+      <div class="ornamen-diamond"></div>
+      <div class="ornamen-diamond"></div>
+      <div class="ornamen-line kanan"></div>
+    </div>
+    <h1>Klasifikasi Motif Batik</h1>
+    <p>Menggunakan Ekstraksi Fitur Tekstur Gray Level Co-occurrence Matrix</p>
+    <span class="badge-glcm">GLCM + K-Nearest Neighbor</span>
+  </header>
+
+  <!-- Upload -->
+  <div class="card">
+    <div class="card-title">📷 Upload Citra Batik</div>
+    <div class="upload-area" id="uploadArea">
+      <input type="file" id="fileInput" accept="image/*">
+      <div class="upload-icon">🖼️</div>
+      <p><strong>Klik untuk pilih gambar</strong> atau seret ke sini</p>
+      <p style="margin-top:6px; font-size:0.8rem;">Format: JPG, PNG &nbsp;|&nbsp; Maks. 5MB</p>
+    </div>
+
+    <div id="preview-section">
+      <img id="preview-img" src="" alt="Preview">
+      <div class="filename" id="filename-label"></div>
+    </div>
+
+    <button class="btn-primary" id="btnAnalyze" onclick="analyze()" disabled>
+      Analisis Citra
+    </button>
+  </div>
+
+  <!-- Hasil -->
+  <div class="card" id="result-section">
+    <div class="card-title">📊 Hasil Klasifikasi</div>
+
+    <div id="demo-notice" class="demo-notice" style="display:none">
+      ⚠️ <strong>Demo Mode:</strong> Model belum dilatih. Fitur GLCM berhasil diekstrak, 
+      namun prediksi kelas membutuhkan model yang sudah di-training dengan dataset.
+    </div>
+
+    <div class="result-label">
+      <div style="font-size:0.8rem; opacity:0.7; margin-bottom:4px;">Motif Terklasifikasi</div>
+      <div class="motif-name" id="result-motif">—</div>
+      <div class="confidence" id="result-confidence"></div>
+    </div>
+
+    <div class="card-title" style="margin-top:0; font-size:0.95rem;">
+      Nilai Fitur GLCM (rata-rata 4 sudut)
+    </div>
+    <div class="features-grid" id="features-grid"></div>
+  </div>
+
+  <!-- Info Kelas -->
+  <div class="card">
+    <div class="card-title">🧵 Kelas Motif yang Didukung</div>
+    <div class="class-list">
+      {% for cls in classes %}
+      <span class="class-pill">{{ cls }}</span>
+      {% endfor %}
+    </div>
+    <p style="margin-top:14px; font-size:0.82rem; color:var(--abu);">
+      Untuk mengubah kelas, sesuaikan folder dataset dan jalankan endpoint <code>/train</code>.
+    </p>
+  </div>
+
+  <footer>
+    Tugas Akhir UAP — Pengolahan Citra Digital &nbsp;|&nbsp; GLCM Feature Extraction
+  </footer>
+
+</div>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const uploadArea = document.getElementById('uploadArea');
+  const btnAnalyze = document.getElementById('btnAnalyze');
+  let selectedFile = null;
+
+  // Drag & drop
+  uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    const f = e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  function handleFile(file) {
+    selectedFile = file;
+    document.getElementById('filename-label').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('preview-img').src = e.target.result;
+      document.getElementById('preview-section').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    btnAnalyze.disabled = false;
+    document.getElementById('result-section').style.display = 'none';
+  }
+
+  async function analyze() {
+    if (!selectedFile) return;
+
+    btnAnalyze.disabled = true;
+    btnAnalyze.innerHTML = '<span class="spinner"></span> Memproses...';
+
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+
+    try {
+      const res = await fetch('/predict', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.error) {
+        alert('Error: ' + data.error);
+        return;
+      }
+
+      // Tampilkan hasil
+      document.getElementById('result-section').style.display = 'block';
+      document.getElementById('result-motif').textContent = data.label;
+
+      if (data.demo_mode) {
+        document.getElementById('demo-notice').style.display = 'block';
+        document.getElementById('result-confidence').textContent = 'Model belum dilatih';
+      } else {
+        document.getElementById('demo-notice').style.display = 'none';
+        document.getElementById('result-confidence').textContent = `Confidence: ${data.confidence}%`;
+      }
+
+      // Render fitur GLCM
+      const grid = document.getElementById('features-grid');
+      grid.innerHTML = '';
+
+      // Normalisasi nilai untuk bar visual (nilai relatif antar fitur)
+      const vals = Object.values(data.features);
+      const maxVal = Math.max(...vals) || 1;
+
+      for (const [name, val] of Object.entries(data.features)) {
+        const pct = Math.min((val / maxVal) * 100, 100).toFixed(0);
+        grid.innerHTML += `
+          <div class="feature-item">
+            <div class="feature-name">${name}</div>
+            <div class="feature-value">${val}</div>
+            <div class="feature-bar">
+              <div class="feature-bar-fill" style="width:${pct}%"></div>
+            </div>
+          </div>`;
+      }
+
+      document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
+
+    } catch (err) {
+      alert('Terjadi kesalahan saat menghubungi server.');
+      console.error(err);
+    } finally {
+      btnAnalyze.disabled = false;
+      btnAnalyze.textContent = 'Analisis Citra';
+    }
+  }
+</script>
+</body>
+</html>
