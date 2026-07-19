@@ -1,51 +1,42 @@
-# 🎨 Batik Motif Classification
+# Klasifikasi Motif Batik
 
-Sistem klasifikasi motif batik menggunakan ekstraksi fitur tekstur **Gray Level Co-occurrence Matrix (GLCM)** dan algoritma **Support Vector Machine (SVM)**, diimplementasikan sebagai aplikasi web interaktif berbasis Flask.
+Sistem machine learning untuk mengklasifikasikan motif batik menggunakan ekstraksi fitur tekstur Gray Level Co-occurrence Matrix (GLCM) dan algoritma Support Vector Machine (SVM). Proyek ini diimplementasikan sebagai aplikasi web interaktif berbasis Flask.
 
-## 📋 Deskripsi
+## Deskripsi
 
-Project ini merupakan Tugas Akhir UAP (Ujian Akhir Praktikum) mata kuliah **Pengolahan Citra Digital**. Sistem mampu mengklasifikasikan tiga motif batik Indonesia secara otomatis berdasarkan analisis tekstur citra.
+Proyek ini dikembangkan sebagai Tugas Akhir Ujian Akhir Praktikum (UAP) mata kuliah Pengolahan Citra Digital. Sistem mampu mengklasifikasikan tiga motif batik Indonesia secara otomatis berdasarkan analisis tekstur citra.
 
 **Motif yang didukung:**
-- **Insang** — Pola susunan sisik ikan berulang dengan tekstur diagonal halus
-- **Kawung** — Pola lingkaran geometris simetris beraturan
-- **Parang** — Pola garis diagonal tegas berulang
+- **Insang** — Pola susunan sisik ikan berulang dengan tekstur diagonal halus.
+- **Kawung** — Pola lingkaran geometris simetris beraturan.
+- **Parang** — Pola garis diagonal tegas berulang.
 
-## 🔬 Metode
+## Metodologi
 
-```
-Input Citra Batik
-      ↓
-Preprocessing (resize 128×128, grayscale)
-      ↓
-Ekstraksi Fitur GLCM
-(5 properti × mean+std × 3 jarak × 4 sudut → 10 fitur)
-      ↓
-Normalisasi (StandardScaler)
-      ↓
-Klasifikasi SVM (kernel RBF, C=10)
-      ↓
-Output: Label Motif + Confidence Score
-```
+### Pipeline
+1. **Input Citra:** Citra batik
+2. **Preprocessing:** Resize ke 128×128 piksel, konversi ke grayscale
+3. **Ekstraksi Fitur:** GLCM (5 properti × mean & std × 3 jarak × 4 sudut → 10 fitur)
+4. **Normalisasi:** StandardScaler
+5. **Klasifikasi:** SVM (kernel RBF, C=10)
+6. **Output:** Label Motif Prediksi + Confidence Score
 
 ### Fitur GLCM yang Diekstrak
 
 | Fitur | Deskripsi |
-|||
+|---|---|
 | Contrast | Perbedaan intensitas antar piksel tetangga |
 | Dissimilarity | Variasi lokal tekstur |
 | Homogeneity | Keseragaman distribusi intensitas |
 | Energy | Keseragaman tekstur (ASM) |
 | Correlation | Hubungan linear antar piksel |
 
-Dihitung pada **4 sudut** (0°, 45°, 90°, 135°) dan **3 jarak** (1, 2, 3 piksel), diambil rata-rata dan standar deviasi → **10 fitur total**.
+Fitur dihitung pada 4 sudut (0°, 45°, 90°, 135°) dan 3 jarak (1, 2, 3 piksel). Rata-rata dan standar deviasi kemudian diekstrak, menghasilkan total 10 fitur.
 
-
-
-## 📊 Hasil Evaluasi
+## Hasil Evaluasi
 
 | Kelas | Precision | Recall | F1-Score | Support |
-||||||
+|---|---|---|---|---|
 | Insang | 0.81 | 0.79 | 0.80 | 28 |
 | Kawung | 0.76 | 0.72 | 0.74 | 57 |
 | Parang | 0.64 | 0.69 | 0.66 | 54 |
@@ -53,118 +44,112 @@ Dihitung pada **4 sudut** (0°, 45°, 90°, 135°) dan **3 jarak** (1, 2, 3 piks
 
 **Cross-validation (5-fold): 71.51% ± 2.64%**
 
-## 🗂️ Struktur Project
+## Struktur Proyek
 
-```
+```text
 batik-motif-classification/
-├── app.py                  # Flask web application
-├── train_model.py          # Script training model
-├── requirements.txt        # Python dependencies
-├── README.md
+├── app.py                  # Aplikasi web Flask
+├── train_model.py          # Skrip pelatihan model
+├── requirements.txt        # Dependensi Python
+├── README.md               # Dokumentasi
 ├── templates/
-│   └── index.html          # UI aplikasi web
-├── model/                  # Dibuat otomatis setelah training
+│   └── index.html          # Template antarmuka web
+├── model/                  # Dibuat otomatis setelah pelatihan
 │   ├── batik_svm.pkl
 │   ├── label_encoder.pkl
 │   ├── scaler.pkl
 │   └── class_names.pkl
-└── dataset/                # Isi dengan dataset (tidak di-upload)
+└── dataset/                # Direktori dataset (tidak masuk version control)
     ├── Insang/
     ├── Kawung/
     └── Parang/
 ```
 
-## 📦 Dataset
+## Dataset
 
-Menggunakan **BatikSnap Dataset** dari Kaggle:
+Proyek ini menggunakan **BatikSnap Dataset** dari Kaggle:
 > [syahdanputra/batiksnap-dataset](https://www.kaggle.com/datasets/syahdanputra/batiksnap-dataset)
 
 | Kelas | Total | Train (80%) | Test (20%) |
-|||||
+|---|---|---|---|
 | Insang | 138 | 110 | 28 |
 | Kawung | 288 | 231 | 57 |
 | Parang | 269 | 215 | 54 |
 | **Total** | **695** | **556** | **139** |
 
-## 🚀 Cara Menjalankan
+## Panduan Instalasi
 
-### 1. Clone repository
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/ReyyIchiro/batik-motif-classification.git
 cd batik-motif-classification
 ```
 
-### 2. Setup environment
+### 2. Setup Environment
 
 ```bash
 # Buat virtual environment
-python -m venv .venv --system-site-packages
-source .venv/bin/activate  # Linux/Mac
+python -m venv .venv
+source .venv/bin/activate  # Linux/macOS
 # .venv\Scripts\activate   # Windows
 
-# Install dependencies
+# Install dependensi
 pip install -r requirements.txt
 ```
 
-### 3. Siapkan dataset
+### 3. Persiapan Dataset
 
-Download dataset dari Kaggle, lalu susun folder seperti berikut:
+Unduh dataset dari Kaggle dan susun struktur direktori sebagai berikut:
 
-```
+```text
 dataset/
-├── Insang/    ← foto motif insang (.jpg/.png)
-├── Kawung/    ← foto motif kawung
-└── Parang/    ← foto motif parang
+├── Insang/    ← citra motif insang (.jpg/.png)
+├── Kawung/    ← citra motif kawung
+└── Parang/    ← citra motif parang
 ```
 
-### 4. Training model
+### 4. Pelatihan Model
 
 ```bash
 python train_model.py
 ```
 
-Output yang diharapkan:
-```
-[✓] Total data: 695 dari 3 kelas
-Akurasi pada data uji : 71.94%
-Cross-validation (5-fold): 71.51% ± 2.64%
-[✓] Model disimpan ke model/batik_svm.pkl
-```
-
-### 5. Jalankan aplikasi
+### 5. Menjalankan Aplikasi (Development)
 
 ```bash
 python app.py
 ```
+Akses aplikasi melalui peramban web di `http://127.0.0.1:5000`.
 
-Buka browser: **http://127.0.0.1:5000**
+### 6. Deployment Production
 
+Untuk lingkungan production, disarankan menggunakan server WSGI standar produksi seperti Gunicorn daripada menggunakan server pengembangan bawaan Flask.
 
+```bash
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
+```
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-| Komponen | Library |
-|||
+| Komponen | Teknologi |
+|---|---|
 | Web Framework | Flask |
-| Image Processing | Pillow, scikit-image |
+| Pemrosesan Citra | Pillow, scikit-image |
 | Machine Learning | scikit-learn (SVM) |
-| Feature Extraction | GLCM (skimage.feature) |
-| Model Serialization | joblib |
+| Ekstraksi Fitur | GLCM (skimage.feature) |
+| Serialisasi Model | joblib |
 
-## 💡 Cara Penggunaan Aplikasi
+## Petunjuk Penggunaan
 
-1. Buka `http://127.0.0.1:5000` di browser
-2. Upload foto motif batik (JPG/PNG, maks. 5MB)
-3. Klik **Analisis Citra**
-4. Sistem akan menampilkan:
-   - Label motif yang terklasifikasi
-   - Confidence score (%)
-   - Nilai 5 fitur GLCM hasil ekstraksi
+1. Buka aplikasi di peramban web.
+2. Unggah citra motif batik (JPG/PNG, maksimal 5MB).
+3. Klik tombol "Analisis Citra".
+4. Sistem akan menampilkan prediksi motif, nilai confidence score, dan fitur GLCM yang diekstrak.
 
-## 📝 Catatan
-
-- Model dilatih dengan rasio split **80% train / 20% test** (stratified)
-- Preprocessing: resize ke **128×128 piksel**, konversi ke **grayscale**
-- Fitur dinormalisasi menggunakan **StandardScaler** sebelum klasifikasi
-- SVM dengan kernel RBF dipilih karena fitur GLCM tidak selalu terpisah secara linear
+## Catatan Tambahan
+- Model dilatih dengan rasio pemisahan (split) 80/20 (stratified).
+- Preprocessing mengubah ukuran citra menjadi 128×128 piksel dan mengkonversinya ke skala abu-abu (grayscale).
+- Fitur dinormalisasi menggunakan StandardScaler sebelum tahap klasifikasi.
+- SVM dengan kernel RBF digunakan karena fitur tekstur GLCM tidak selalu terpisah secara linear.

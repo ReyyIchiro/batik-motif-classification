@@ -1,10 +1,9 @@
 """
 train_model.py
 --------------
-Training model klasifikasi batik GLCM + SVM.
-SVM lebih baik dari KNN untuk fitur tekstur yang overlap.
+Training script for Batik motif classification using GLCM and SVM.
 
-Cara pakai:
+Usage:
     python train_model.py
 """
 
@@ -73,10 +72,11 @@ def load_dataset(dataset_path):
                 X.append(feats)
                 y_labels.append(cls)
                 ok += 1
-            except:
+            except Exception as e:
+                # Silently skip invalid images or extraction failures
                 pass
 
-        print(f" → {ok} berhasil diproses")
+        print(f" -> {ok} successfully processed")
 
     print(f"\n[✓] Total data: {len(X)} dari {len(class_names)} kelas\n")
     return np.array(X), np.array(y_labels), class_names
@@ -98,8 +98,8 @@ def main():
     print(f"Data uji   : {len(X_test)} sampel")
     print(f"Fitur      : {X.shape[1]} fitur GLCM\n")
 
-    # SVM dengan kernel RBF — lebih baik untuk fitur tekstur yang tidak linear
-    print("[*] Melatih SVM (kernel=rbf)...")
+    # Initialize and train SVM classifier
+    print("[*] Training SVM classifier (kernel=rbf)...")
     svm = SVC(kernel='rbf', C=10, gamma='scale', probability=True, random_state=42)
     svm.fit(X_train, y_train)
 

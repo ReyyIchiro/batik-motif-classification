@@ -95,7 +95,8 @@ def predict():
         })
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        app.logger.error(f"Error processing image: {str(e)}")
+        return jsonify({'error': 'An internal error occurred during processing.'}), 500
 
     finally:
         if os.path.exists(filepath):
@@ -104,4 +105,5 @@ def predict():
 
 if __name__ == '__main__':
     os.makedirs('uploads', exist_ok=True)
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
+    app.run(debug=debug_mode, host='0.0.0.0', port=5000)
